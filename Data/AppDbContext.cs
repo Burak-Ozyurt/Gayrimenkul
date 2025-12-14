@@ -21,8 +21,7 @@ namespace Gayrimenkul.Data
             // Seed data - Kategoriler
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Satılık", Description = "Satılık gayrimenkuller" },
-                new Category { Id = 2, Name = "Kiralık", Description = "Kiralık gayrimenkuller" },
-                new Category { Id = 3, Name = "Devren", Description = "Devren satılık işyerleri" }
+                new Category { Id = 2, Name = "Kiralık", Description = "Kiralık gayrimenkuller" }
             );
 
             // Seed data - Demo kullanıcı
@@ -32,9 +31,9 @@ namespace Gayrimenkul.Data
                     Id = 1,
                     FullName = "Demo Kullanıcı",
                     Email = "demo@gayrimenkul.com",
-                    Password = "123456", // Gerçek projede hash'lenmiş olmalı
+                    Password = "123456",
                     Phone = "0555 123 4567",
-                    CreatedAt = DateTime.Now
+                    CreatedAt = new DateTime(2024, 1, 1)
                 }
             );
 
@@ -57,7 +56,7 @@ namespace Gayrimenkul.Data
                     IsActive = true,
                     CategoryId = 1,
                     UserId = 1,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = new DateTime(2024, 1, 1)
                 },
                 new Property
                 {
@@ -76,7 +75,7 @@ namespace Gayrimenkul.Data
                     IsActive = true,
                     CategoryId = 1,
                     UserId = 1,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = new DateTime(2024, 1, 1)
                 },
                 new Property
                 {
@@ -95,7 +94,7 @@ namespace Gayrimenkul.Data
                     IsActive = true,
                     CategoryId = 2,
                     UserId = 1,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = new DateTime(2024, 1, 1)
                 }
             );
         }

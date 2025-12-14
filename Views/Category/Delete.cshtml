@@ -1,0 +1,64 @@
+@model Gayrimenkul.Models.Category
+@{
+    ViewData["Title"] = "Kategori Sil";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3><i class="fas fa-trash"></i> Kategori Sil</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Bu kategoriyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!
+                    </div>
+
+                    @if (Model.Properties != null && Model.Properties.Any())
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Uyarı!</strong> Bu kategoriye ait <strong>@Model.Properties.Count ilan</strong> bulunmaktadır. 
+                            Kategoriyi silmeden önce bu ilanları silmelisiniz veya başka bir kategoriye taşımalısınız.
+                        </div>
+                    }
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-tag"></i> @Model.Name
+                            </h5>
+                            <p class="card-text text-muted">@Model.Description</p>
+                            <p class="text-info">
+                                <i class="fas fa-home"></i> @(Model.Properties?.Count ?? 0) ilan
+                            </p>
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-grid gap-2">
+                            @if (Model.Properties == null || !Model.Properties.Any())
+                            {
+                                <button type="submit" class="btn btn-danger btn-lg">
+                                    <i class="fas fa-trash"></i> Evet, Sil
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-danger btn-lg" disabled>
+                                    <i class="fas fa-trash"></i> Silme İşlemi Yapılamaz
+                                </button>
+                            }
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> İptal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

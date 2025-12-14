@@ -14,20 +14,17 @@ namespace Gayrimenkul.Controllers
             _context = context;
         }
 
-        // GET: Account/Register
         public IActionResult Register()
         {
             return View();
         }
 
-        // POST: Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register([Bind("FullName,Email,Password,Phone")] User user)
         {
             if (ModelState.IsValid)
             {
-                // Email kontrolü
                 var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
                 if (existingUser != null)
                 {
@@ -45,13 +42,11 @@ namespace Gayrimenkul.Controllers
             return View(user);
         }
 
-        // GET: Account/Login
         public IActionResult Login()
         {
             return View();
         }
 
-        // POST: Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string email, string password)
@@ -70,7 +65,6 @@ namespace Gayrimenkul.Controllers
                 return View();
             }
 
-            // Session'a kullanıcı bilgilerini kaydet
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("UserName", user.FullName);
             HttpContext.Session.SetString("UserEmail", user.Email);
@@ -79,7 +73,45 @@ namespace Gayrimenkul.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // GET: Account/Logout
+        public async Task<IActionResult> Profile()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null) return RedirectToAction("Login");
+
+            var user = await _context.Users.FindAsync(userId);
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(User model)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId != model.Id) return RedirectToAction("Login");
+
+            ModelState.Remove("Email"); 
+            ModelState.Remove("Password"); 
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user != null)
+            {
+                user.FullName = model.FullName;
+                user.Phone = model.Phone;
+                
+                if (!string.IsNullOrEmpty(model.Password))
+                {
+                    user.Password = model.Password;
+                }
+
+                _context.Update(user);
+                await _context.SaveChangesAsync();
+                
+                HttpContext.Session.SetString("UserName", user.FullName);
+                TempData["Success"] = "Profil bilgileri güncellendi.";
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();

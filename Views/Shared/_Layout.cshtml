@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="h-100">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,7 +12,7 @@
         .navbar-brand { font-weight: bold; font-size: 1.5rem; }
     </style>
 </head>
-<body>
+<body class="d-flex flex-column h-100">
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
@@ -25,13 +25,15 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">İlanlar</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Category" asp-action="Index">Kategoriler</a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Tüm İlanlar</a>
                         </li>
                         @if (Context.Session.GetInt32("UserId") != null)
                         {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="MyProperties">
+                                    <i class="fas fa-list-alt"></i> İlanlarım
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Home" asp-action="Create">
                                     <i class="fas fa-plus"></i> İlan Ekle
@@ -46,7 +48,9 @@
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-user"></i> @Context.Session.GetString("UserName")
                                 </a>
-                                <ul class="dropdown-menu">
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="fas fa-cog"></i> Profil Ayarları</a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">Çıkış Yap</a></li>
                                 </ul>
                             </li>
@@ -66,7 +70,7 @@
         </nav>
     </header>
 
-    <main role="main" class="pb-3">
+    <main role="main" class="flex-shrink-0">
         @if (TempData["Success"] != null)
         {
             <div class="container mt-3">
@@ -88,9 +92,9 @@
         @RenderBody()
     </main>
 
-    <footer class="bg-dark text-white text-center py-3 mt-5">
+    <footer class="footer mt-auto py-3 bg-dark text-white text-center">
         <div class="container">
-            <p>&copy; 2025 - Gayrimenkul - SWE 203 Web Programming Project</p>
+            <p>&copy; 2025 - Gayrimenkul Projesi</p>
         </div>
     </footer>
 

@@ -106,6 +106,65 @@ namespace Gayrimenkul.Controllers
             return View(category);
         }
 
+        // GET: Category/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                TempData["Error"] = "Kategori silmek için giriş yapmalısınız!";
+                return RedirectToAction("Login", "Account");
+            }
+
+            var category = await _context.Categories
+                .Include(c => c.Properties)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            return View(category);
+        }
+
+        // POST: Category/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var category = await _context.Categories
+                .Include(c => c.Properties)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (category != null)
+            {
+                // Kategoriye ait ilanlar varsa silmeye izin verme
+                if (category.Properties != null && category.Properties.Any())
+                {
+                    TempData["Error"] = "Bu kategoriye ait ilanlar bulunuyor! Önce ilanları silmelisiniz.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Kategori başarıyla silindi!";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         private bool CategoryExists(int id)
         {
             return _context.Categories.Any(e => e.Id == id);

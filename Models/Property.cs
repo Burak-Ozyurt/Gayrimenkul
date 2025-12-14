@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Http;
 
 namespace Gayrimenkul.Models
 {
@@ -46,6 +47,9 @@ namespace Gayrimenkul.Models
         
         [StringLength(500)]
         public string? ImageUrl { get; set; }
+
+        [NotMapped]
+        public IFormFile? ImageUpload { get; set; }
         
         public bool IsActive { get; set; } = true;
         

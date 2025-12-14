@@ -10,23 +10,33 @@
         </div>
     </div>
 
-    <!-- Filtreleme Formu -->
     <div class="card mb-4">
         <div class="card-body">
             <form asp-action="Index" method="get" class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Şehir</label>
-                    <input type="text" class="form-control" name="searchCity" value="@ViewBag.SearchCity" placeholder="Şehir ara...">
+                    <select class="form-select" name="searchCity">
+                        <option value="">Tüm Şehirler</option>
+                        <option value="İstanbul" selected="@(ViewBag.SearchCity == "İstanbul")">İstanbul</option>
+                        <option value="Ankara" selected="@(ViewBag.SearchCity == "Ankara")">Ankara</option>
+                        <option value="İzmir" selected="@(ViewBag.SearchCity == "İzmir")">İzmir</option>
+                        <option value="Bursa" selected="@(ViewBag.SearchCity == "Bursa")">Bursa</option>
+                        <option value="Antalya" selected="@(ViewBag.SearchCity == "Antalya")">Antalya</option>
+                        <option value="Sakarya" selected="@(ViewBag.SearchCity == "Sakarya")">Sakarya</option>
+                    </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Kategori</label>
                     <select class="form-select" name="categoryId">
                         <option value="">Tüm Kategoriler</option>
-                        @foreach (var category in ViewBag.Categories)
+                        @if (ViewBag.Categories != null)
                         {
-                            <option value="@category.Id" selected="@(ViewBag.SelectedCategory == category.Id)">
-                                @category.Name
-                            </option>
+                            @foreach (var category in ViewBag.Categories)
+                            {
+                                <option value="@category.Id" selected="@(ViewBag.SelectedCategory == category.Id)">
+                                    @category.Name
+                                </option>
+                            }
                         }
                     </select>
                 </div>
@@ -39,7 +49,6 @@
         </div>
     </div>
 
-    <!-- İlanlar -->
     <div class="row">
         @foreach (var item in Model)
         {
@@ -60,9 +69,22 @@
                             </small>
                         </div>
                         <h4 class="text-primary">₺@item.Price.ToString("N0")</h4>
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary w-100">
+                        
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary w-100 mb-2">
                             <i class="fas fa-eye"></i> Detaylar
                         </a>
+
+                        @if (Context.Session.GetInt32("UserId") == item.UserId)
+                        {
+                            <div class="d-flex gap-2">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning flex-grow-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger flex-grow-1">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>

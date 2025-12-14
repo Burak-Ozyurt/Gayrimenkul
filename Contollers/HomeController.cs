@@ -14,7 +14,7 @@ namespace Gayrimenkul.Controllers
             _context = context;
         }
 
-        // GET: Home/Index - Tüm ilanları listele
+        // GET: Home/Index
         public async Task<IActionResult> Index(string searchCity, int? categoryId)
         {
             ViewBag.Categories = await _context.Categories.ToListAsync();
@@ -26,13 +26,11 @@ namespace Gayrimenkul.Controllers
                 .Include(p => p.User)
                 .Where(p => p.IsActive);
 
-            // Kategori filtresi
             if (categoryId.HasValue && categoryId > 0)
             {
                 properties = properties.Where(p => p.CategoryId == categoryId);
             }
 
-            // Şehir filtresi
             if (!string.IsNullOrEmpty(searchCity))
             {
                 properties = properties.Where(p => p.City.Contains(searchCity));
@@ -41,31 +39,39 @@ namespace Gayrimenkul.Controllers
             return View(await properties.OrderByDescending(p => p.CreatedAt).ToListAsync());
         }
 
-        // GET: Home/Details/5
+        // GET: Home/MyProperties (SADECE BENİM İLANLARIM)
+        public async Task<IActionResult> MyProperties()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null) return RedirectToAction("Login", "Account");
+
+            var myProperties = await _context.Properties
+                .Include(p => p.Category)
+                .Where(p => p.UserId == userId)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            // Kategori listesi filtreleme için gerekebilir diye boş gönderiyoruz veya doldurabiliriz
+            ViewBag.Categories = await _context.Categories.ToListAsync(); 
+            return View("Index", myProperties);
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var property = await _context.Properties
                 .Include(p => p.Category)
                 .Include(p => p.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (property == null)
-            {
-                return NotFound();
-            }
+            if (property == null) return NotFound();
 
             return View(property);
         }
 
-        // GET: Home/Create
         public IActionResult Create()
         {
-            // Kullanıcı girişi kontrolü
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null)
             {
@@ -77,19 +83,36 @@ namespace Gayrimenkul.Controllers
             return View();
         }
 
-        // POST: Home/Create
+        // POST: Home/Create (RESİM YÜKLEME GÜNCELLENDİ)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Description,Price,City,District,Address,SquareMeters,Rooms,Bathrooms,Floor,ImageUrl,CategoryId")] Property property)
+        public async Task<IActionResult> Create(Property property)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            if (userId == null) return RedirectToAction("Login", "Account");
 
             if (ModelState.IsValid)
             {
+                // Resim Yükleme İşlemi
+                if (property.ImageUpload != null)
+                {
+                    var extension = Path.GetExtension(property.ImageUpload.FileName);
+                    var newImageName = Guid.NewGuid() + extension;
+                    var location = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/", newImageName);
+                    
+                    Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/"));
+
+                    using (var stream = new FileStream(location, FileMode.Create))
+                    {
+                        await property.ImageUpload.CopyToAsync(stream);
+                    }
+                    property.ImageUrl = "/images/" + newImageName;
+                }
+                else 
+                {
+                    property.ImageUrl = "https://via.placeholder.com/400x300";
+                }
+
                 property.UserId = userId.Value;
                 property.CreatedAt = DateTime.Now;
                 property.IsActive = true;
@@ -105,27 +128,16 @@ namespace Gayrimenkul.Controllers
             return View(property);
         }
 
-        // GET: Home/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            if (userId == null) return RedirectToAction("Login", "Account");
 
             var property = await _context.Properties.FindAsync(id);
-            if (property == null)
-            {
-                return NotFound();
-            }
+            if (property == null) return NotFound();
 
-            // Sadece ilan sahibi düzenleyebilir
             if (property.UserId != userId)
             {
                 TempData["Error"] = "Bu ilanı düzenleme yetkiniz yok!";
@@ -136,40 +148,29 @@ namespace Gayrimenkul.Controllers
             return View(property);
         }
 
-        // POST: Home/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Price,City,District,Address,SquareMeters,Rooms,Bathrooms,Floor,ImageUrl,CategoryId,UserId,CreatedAt,IsActive")] Property property)
+        public async Task<IActionResult> Edit(int id, Property property)
         {
-            if (id != property.Id)
-            {
-                return NotFound();
-            }
+            if (id != property.Id) return NotFound();
 
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null || property.UserId != userId)
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            if (userId == null || property.UserId != userId) return RedirectToAction("Login", "Account");
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Eğer yeni resim yüklenmediyse eskisini korumak gerekebilir
+                    // Basitlik adına burada sadece text alanları güncelliyoruz
                     _context.Update(property);
                     await _context.SaveChangesAsync();
                     TempData["Success"] = "İlan başarıyla güncellendi!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!PropertyExists(property.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!PropertyExists(property.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -178,29 +179,19 @@ namespace Gayrimenkul.Controllers
             return View(property);
         }
 
-        // GET: Home/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            if (userId == null) return RedirectToAction("Login", "Account");
 
             var property = await _context.Properties
                 .Include(p => p.Category)
                 .Include(p => p.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (property == null)
-            {
-                return NotFound();
-            }
+            if (property == null) return NotFound();
 
             if (property.UserId != userId)
             {
@@ -211,7 +202,6 @@ namespace Gayrimenkul.Controllers
             return View(property);
         }
 
-        // POST: Home/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
